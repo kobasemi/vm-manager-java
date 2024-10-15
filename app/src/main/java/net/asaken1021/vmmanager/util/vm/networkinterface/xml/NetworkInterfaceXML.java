@@ -1,13 +1,10 @@
-package net.asaken1021.vmmanager.util.vm.networkinterface;
+package net.asaken1021.vmmanager.util.vm.networkinterface.xml;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import net.asaken1021.vmmanager.util.vm.networkinterface.xml.Mac;
-import net.asaken1021.vmmanager.util.vm.networkinterface.xml.Model;
-import net.asaken1021.vmmanager.util.vm.networkinterface.xml.Source;
 
 @XmlRootElement(name="interface")
 @XmlAccessorType(XmlAccessType.FIELD)

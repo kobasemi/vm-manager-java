@@ -1,10 +1,9 @@
-package net.asaken1021.vmmanager.util.vm.video;
+package net.asaken1021.vmmanager.util.vm.video.xml;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import net.asaken1021.vmmanager.util.vm.video.xml.Model;
 
 @XmlRootElement(name="video")
 @XmlAccessorType(XmlAccessType.FIELD)

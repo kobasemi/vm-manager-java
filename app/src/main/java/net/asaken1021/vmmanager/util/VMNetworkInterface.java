@@ -3,6 +3,7 @@ package net.asaken1021.vmmanager.util;
 import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 import net.asaken1021.vmmanager.util.vm.networkinterface.*;
+import net.asaken1021.vmmanager.util.vm.networkinterface.xml.NetworkInterfaceXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
 
 public class VMNetworkInterface {
