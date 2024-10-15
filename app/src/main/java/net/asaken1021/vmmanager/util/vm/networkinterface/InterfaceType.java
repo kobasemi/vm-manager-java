@@ -1,5 +1,7 @@
 package net.asaken1021.vmmanager.util.vm.networkinterface;
 
+import net.asaken1021.vmmanager.util.TypeNotFoundException;
+
 public enum InterfaceType {
     IF_NETWORK("network"),
     IF_BRIDGE("bridge");
@@ -14,13 +16,13 @@ public enum InterfaceType {
         return this.text;
     }
 
-    public static InterfaceType getTypeByString(String type) {
+    public static InterfaceType getTypeByString(String type) throws TypeNotFoundException {
         if (type.equals(InterfaceType.IF_NETWORK.getText())) {
             return InterfaceType.IF_NETWORK;
         } else if (type.equals(InterfaceType.IF_BRIDGE.getText())) {
             return InterfaceType.IF_BRIDGE;
         }
         
-        return null;
+        throw new TypeNotFoundException();
     }
 }

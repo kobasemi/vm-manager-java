@@ -20,7 +20,7 @@ public class VMVideo {
         this.vram = vram;
     }
 
-    public VMVideo(String xmlDesc) throws JAXBException {
+    public VMVideo(String xmlDesc) throws JAXBException, TypeNotFoundException {
         VideoXML videoXML = new DomainXMLParser(xmlDesc, XMLType.TYPE_VIDEO).parseVideoXML();
 
         this.videoType = VideoType.getTypeByString(videoXML.getModel().getType());

@@ -19,7 +19,7 @@ public class VMNetworkInterface {
         this.interfaceType = interfaceType;
     }
 
-    public VMNetworkInterface(String xmlDesc) throws JAXBException {
+    public VMNetworkInterface(String xmlDesc) throws JAXBException, TypeNotFoundException {
         NetworkInterfaceXML interfaceXML = new DomainXMLParser(xmlDesc, XMLType.TYPE_NETWORKINTERFACE).parseNetworkInterfaceXML();
 
         this.macAddress = interfaceXML.getMac().getAddress();
