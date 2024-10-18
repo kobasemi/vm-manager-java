@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util;
+package net.asaken1021.vmmanager.util.vm;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -30,6 +30,10 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import jakarta.xml.bind.JAXBException;
+import net.asaken1021.vmmanager.util.DomainLookupException;
+import net.asaken1021.vmmanager.util.FileNotFoundException;
+import net.asaken1021.vmmanager.util.TypeNotFoundException;
+import net.asaken1021.vmmanager.util.XMLParserException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 
 public class VMDomain {

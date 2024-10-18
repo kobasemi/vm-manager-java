@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util;
+package net.asaken1021.vmmanager.util.vm;
 
 public enum VMRamUnit {
     RAM_MiB,

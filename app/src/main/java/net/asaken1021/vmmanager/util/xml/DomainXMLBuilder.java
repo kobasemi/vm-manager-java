@@ -19,10 +19,10 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import net.asaken1021.vmmanager.util.VMDisk;
-import net.asaken1021.vmmanager.util.VMGraphics;
-import net.asaken1021.vmmanager.util.VMNetworkInterface;
-import net.asaken1021.vmmanager.util.VMVideo;
+import net.asaken1021.vmmanager.util.vm.VMDisk;
+import net.asaken1021.vmmanager.util.vm.VMGraphics;
+import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.vm.VMVideo;
 
 public class DomainXMLBuilder {
     private String vmName;

@@ -8,6 +8,12 @@ import java.util.Scanner;
 import org.libvirt.LibvirtException;
 
 import net.asaken1021.vmmanager.util.*;
+import net.asaken1021.vmmanager.util.vm.VMDisk;
+import net.asaken1021.vmmanager.util.vm.VMDomain;
+import net.asaken1021.vmmanager.util.vm.VMGraphics;
+import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.vm.VMRamUnit;
+import net.asaken1021.vmmanager.util.vm.VMVideo;
 import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
 import net.asaken1021.vmmanager.util.vm.video.VideoType;
 

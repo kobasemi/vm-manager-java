@@ -9,6 +9,11 @@ import javax.xml.transform.TransformerException;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
+import net.asaken1021.vmmanager.util.vm.VMDisk;
+import net.asaken1021.vmmanager.util.vm.VMDomain;
+import net.asaken1021.vmmanager.util.vm.VMGraphics;
+import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.vm.VMVideo;
 import net.asaken1021.vmmanager.util.xml.DomainXMLBuilder;
 
 public class VMManager {

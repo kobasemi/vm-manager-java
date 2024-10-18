@@ -1,9 +1,10 @@
-package net.asaken1021.vmmanager.util;
+package net.asaken1021.vmmanager.util.vm;
 
 import java.io.File;
 
 import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
+import net.asaken1021.vmmanager.util.FileNotFoundException;
 import net.asaken1021.vmmanager.util.vm.disk.xml.DiskXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
 
