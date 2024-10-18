@@ -3,6 +3,9 @@ package net.asaken1021.vmmanager.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
@@ -11,12 +14,12 @@ import net.asaken1021.vmmanager.util.xml.DomainXMLBuilder;
 public class VMManager {
     private Connect conn;
 
-    public VMManager(String uri) throws LibvirtException {
+    public VMManager(String uri) throws ConnectException {
         try {
+            Connect.setErrorCallback(new ErrorCallback());
             this.conn = new Connect(uri);
         } catch (LibvirtException e) {
-            System.err.println("Error: Cannot connect to libvirt daemon.");
-            e.printStackTrace();
+            throw new ConnectException(e);
         }
     }
 
@@ -24,49 +27,54 @@ public class VMManager {
         return this.conn;
     }
 
-    public List<String> getVmNames() throws LibvirtException {
+    public void disconnect() throws LibvirtException {
+        this.conn.close();
+    }
+
+    public List<String> getVmNames() throws DomainLookupException {
         List<String> vmNames = new ArrayList<String>();
         int[] vmIds;
 
-        for (String name : this.conn.listDefinedDomains()) {
-            vmNames.add(name);
+        try {
+            for (String name : this.conn.listDefinedDomains()) {
+                vmNames.add(name);
+            }
+
+            vmIds = this.conn.listDomains();
+
+            for (int vmId : vmIds) {
+                vmNames.add(this.conn.domainLookupByID(vmId).getName());
+            }
+
+            return vmNames;
+        } catch (LibvirtException e) {
+            throw new DomainLookupException(e);
         }
-
-        vmIds = this.conn.listDomains();
-
-        for (int vmId : vmIds) {
-            vmNames.add(this.conn.domainLookupByID(vmId).getName());
-        }
-
-        return vmNames;
     }
 
     public VMDomain createVm(String name, int cpus, long ram, List<VMDisk> disks,
-    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video) {
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
+    throws DomainCreateException {
         try {
             DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, disks, networkInterfaces, graphics, video);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 
             return new VMDomain(this.conn, name);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException e) {
+            throw new DomainCreateException(e);
         }
-
-        return null;
     }
 
-    public VMDomain getVm(String name) throws LibvirtException {
+    public VMDomain getVm(String name) throws DomainLookupException {
         return new VMDomain(this.conn, name);
     }
 
-    public boolean deleteVm(String name) {
+    public void deleteVm(String name) throws DomainDeleteException {
         try {
             this.conn.domainLookupByName(name).undefine();
-            return true;
         } catch (LibvirtException e) {
+            throw new DomainDeleteException(e);
         }
-
-        return false;
     }
 }

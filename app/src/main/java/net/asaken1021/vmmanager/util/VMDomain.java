@@ -1,5 +1,6 @@
 package net.asaken1021.vmmanager.util;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,13 +9,16 @@ import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.libvirt.Connect;
@@ -23,7 +27,9 @@ import org.libvirt.DomainInfo;
 import org.libvirt.LibvirtException;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 
 public class VMDomain {
@@ -39,19 +45,27 @@ public class VMDomain {
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
 
-    public VMDomain(Connect conn, String name) throws LibvirtException {
+    public VMDomain(Connect conn, String name) throws DomainLookupException {
         this.conn = conn;
-        this.dom = this.conn.domainLookupByName(name);
-        initData(this.dom);
+        try {
+            this.dom = this.conn.domainLookupByName(name);
+            initData(this.dom);
+        } catch (LibvirtException | XMLParserException e) {
+            throw new DomainLookupException(e);
+        }
     }
 
-    public VMDomain(Connect conn, UUID uuid) throws LibvirtException {
+    public VMDomain(Connect conn, UUID uuid) throws DomainLookupException {
         this.conn = conn;
-        this.dom = this.conn.domainLookupByUUID(uuid);
-        initData(this.dom);
+        try {
+            this.dom = this.conn.domainLookupByUUID(uuid);
+            initData(this.dom);
+        } catch (LibvirtException | XMLParserException e) {
+            throw new DomainLookupException(e);
+        }
     }
 
-    private void initData(Domain dom) throws LibvirtException {
+    private void initData(Domain dom) throws LibvirtException, XMLParserException {
         this.domInfo = dom.getInfo();
 
         this.vmName = dom.getName();
@@ -63,61 +77,54 @@ public class VMDomain {
         this.vmVideo = parseVmVideo(dom);
     }
 
-    private List<VMDisk> parseVmDisks(Domain dom) {
-        List<String> vmDisksXML;
+    private List<VMDisk> parseVmDisks(Domain dom) throws XMLParserException {
         List<VMDisk> vmDisks = new ArrayList<VMDisk>();
 
         try {
-            vmDisksXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_DISK);
-
-            for (String vmDiskXML : vmDisksXML) {
+            for (String vmDiskXML : parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_DISK)) {
                 vmDisks.add(new VMDisk(vmDiskXML));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (LibvirtException | JAXBException | FileNotFoundException e ) {
+            throw new XMLParserException(e);
         }
 
         return vmDisks;
     }
 
-    private List<VMNetworkInterface> parseVmNetworkInterfaces(Domain dom) {
-        List<String> vmNetworkInterfacesXML;
+    private List<VMNetworkInterface> parseVmNetworkInterfaces(Domain dom) throws XMLParserException {
         List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
 
         try {
-            vmNetworkInterfacesXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_NETWORKINTERFACE);
-
-            for (String vmNetworkInterfaceXML : vmNetworkInterfacesXML) {
+            for (String vmNetworkInterfaceXML : parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_NETWORKINTERFACE)) {
                 vmNetworkInterfaces.add(new VMNetworkInterface(vmNetworkInterfaceXML));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (LibvirtException | JAXBException | TypeNotFoundException e) {
+            throw new XMLParserException(e);
         }
 
         return vmNetworkInterfaces;
     }
 
-    private VMGraphics parseVmGraphics(Domain dom) {
+    private VMGraphics parseVmGraphics(Domain dom) throws XMLParserException {
         List<String> vmGraphicsXML;
         VMGraphics vmGraphics;
 
         try {
             vmGraphicsXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_GRAPHICS);
 
-            if (vmGraphicsXML.size() != 1) {
-                return null;
-            } else {
+            if (vmGraphicsXML.size() == 1) {
                 vmGraphics = new VMGraphics(vmGraphicsXML.get(0));
+            } else {
+                return null;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (LibvirtException | JAXBException e) {
+            throw new XMLParserException(e);
         }
 
         return vmGraphics;
     }
 
-    private VMVideo parseVmVideo(Domain dom) {
+    private VMVideo parseVmVideo(Domain dom) throws XMLParserException {
         List<String> vmVideoXML;
         VMVideo vmVideo;
 
@@ -129,15 +136,14 @@ public class VMDomain {
             } else {
                 vmVideo = new VMVideo(vmVideoXML.get(0));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (LibvirtException | JAXBException | TypeNotFoundException e) {
+            throw new XMLParserException(e);
         }
 
         return vmVideo;
     }
 
-    private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) {
+    private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) throws XMLParserException {
         DocumentBuilderFactory factory;
         DocumentBuilder builder;
         Document document;
@@ -147,65 +153,69 @@ public class VMDomain {
 
         List<String> xmlNodes = new ArrayList<String>();
 
+        factory = DocumentBuilderFactory.newInstance();
+
         try {
-            factory = DocumentBuilderFactory.newInstance();
             builder = factory.newDocumentBuilder();
             document = builder.parse(new InputSource(new StringReader(xmlDesc)));
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new XMLParserException(e);
+        }
 
-            xPathFactory = XPathFactory.newInstance();
-            xPath = xPathFactory.newXPath();
+        xPathFactory = XPathFactory.newInstance();
+        xPath = xPathFactory.newXPath();
+
+        try {
             nodeList = (NodeList)xPath.evaluate(xmlType.getXPath(), document, XPathConstants.NODESET);
 
             for (int i = 0; i < nodeList.getLength(); i++) {
                 xmlNodes.add(nodeToString(nodeList.item(i)));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (XPathExpressionException | TransformerException e) {
+            throw new XMLParserException(e);
         }
 
         return xmlNodes;
     }
 
-    private String nodeToString(Node node) {
+    private String nodeToString(Node node) throws TransformerException {
         TransformerFactory transformerFactory;
         Transformer transformer;
         DOMSource domSource;
         StringWriter writer;
         StreamResult result;
 
-        try {
-            transformerFactory = TransformerFactory.newInstance();
-            transformer = transformerFactory.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformerFactory = TransformerFactory.newInstance();
+        transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-            domSource = new DOMSource(node);
-            writer = new StringWriter();
-            result = new StreamResult(writer);
+        domSource = new DOMSource(node);
+        writer = new StringWriter();
+        result = new StreamResult(writer);
 
-            transformer.transform(domSource, result);
+        transformer.transform(domSource, result);
 
-            return writer.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return "";
+        return writer.toString();
     }
 
-    private String getVmUUIDString() throws LibvirtException {
-        return this.dom.getUUIDString();
+    private String getVmUUIDString() {
+        try {
+            return this.dom.getUUIDString();
+        } catch (LibvirtException e) {
+            return "";
+        }
     }
 
     private DomainInfo.DomainState getVmState() {
         return this.domInfo.state;
     }
 
-    public String getVmName() throws LibvirtException {
+    public String getVmName() {
         return this.vmName;
     }
 
-    public UUID getVmUUID() throws LibvirtException {
+    public UUID getVmUUID() {
         return UUID.fromString(getVmUUIDString());
     }
 

@@ -1,8 +1,11 @@
 package net.asaken1021.vmmanager;
 
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Scanner;
+
+import org.libvirt.LibvirtException;
 
 import net.asaken1021.vmmanager.util.*;
 import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
@@ -10,34 +13,43 @@ import net.asaken1021.vmmanager.util.vm.video.VideoType;
 
 public class App {
     public static void main(String[] args) {
+        VMManager vmm;
+        int select = 0;
+        Scanner scanner = new Scanner(System.in);
+
+        List<String> vmNames;
+
+        String vmName;
+        int vmCpus;
+        long vmRam;
+        String vmDiskPath;
+        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+        List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+        VMGraphics vmGraphics;
+        VMVideo vmVideo;
+
+        VMDomain domain;
+        
         try {
-            VMManager vmm = new VMManager("qemu:///system");
-            int select = 0;
-            Scanner scanner = new Scanner(System.in);
+            vmm = new VMManager("qemu:///system");
+        } catch (ConnectException e) {
+            printError(e.getLocalizedMessage());
+            scanner.close();
+            return;
+        }
 
-            List<String> vmNames;
+        while (select >= 0) {
+            printLine();
 
-            String vmName;
-            int vmCpus;
-            long vmRam;
-            String vmDiskPath;
-            List<VMDisk> vmDisks = new ArrayList<VMDisk>();
-            List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
-            VMGraphics vmGraphics;
-            VMVideo vmVideo;
+            System.out.println("MENU");
+            System.out.println("Create VM    :  1");
+            System.out.println("Get VMs List :  2");
+            System.out.println("Get VM Info  :  3");
+            System.out.println("Delete VM    :  4");
+            System.out.println("Exit         : -1");
+            System.out.print("Select > ");
 
-            VMDomain domain;
-
-            while (select >= 0) {
-                printLine();
-
-                System.out.println("MENU");
-                System.out.println("Create VM    :  1");
-                System.out.println("Get VMs List :  2");
-                System.out.println("Get VM Info  :  3");
-                System.out.println("Delete VM    :  4");
-                System.out.println("Exit         : -1");
-                System.out.print("Select > ");
+            try {
                 select = scanner.nextInt();
 
                 printLine();
@@ -90,17 +102,23 @@ public class App {
                     case 4:
                         System.out.print("VM Name > ");
                         vmName = scanner.next();
-                        if (vmm.deleteVm(vmName)) {
-                            System.out.println("Deleted Successfully");
-                        } else {
-                            System.out.println("Failed to delete vm");
-                        }
+                        vmm.deleteVm(vmName);
+                        System.out.println();
                         break;
                 }
+            } catch (DomainCreateException | DomainLookupException | DomainDeleteException | FileNotFoundException e) {
+                printError(e.getLocalizedMessage());
+            } catch (InputMismatchException e) {
+                printLine();
+                printError("入力に誤りがあります");
+                scanner = new Scanner(System.in);
             }
+        }
 
-            scanner.close();
-        } catch (Exception e) {
+        scanner.close();
+        try {
+            vmm.disconnect();
+        } catch (LibvirtException e) {
             e.printStackTrace();
         }
     }
@@ -110,5 +128,9 @@ public class App {
             System.out.print("-");
         }
         System.out.println();
+    }
+
+    private static void printError(String message) {
+        System.err.println("エラー: " + message);
     }
 }

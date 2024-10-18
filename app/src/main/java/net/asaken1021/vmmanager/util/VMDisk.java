@@ -1,5 +1,7 @@
 package net.asaken1021.vmmanager.util;
 
+import java.io.File;
+
 import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 import net.asaken1021.vmmanager.util.vm.disk.xml.DiskXML;
@@ -15,7 +17,7 @@ public class VMDisk {
     private String targetBus;
 
     public VMDisk(String device, String type, String driverName, String driverType, 
-        String sourceFile, String targetDev, String targetBus) {
+        String sourceFile, String targetDev, String targetBus) throws FileNotFoundException {
         this.device = device;
         this.type = type;
         this.driverName = driverName;
@@ -23,9 +25,13 @@ public class VMDisk {
         this.sourceFile = sourceFile;
         this.targetDev = targetDev;
         this.targetBus = targetBus;
+
+        if (!new File(this.sourceFile).exists()) {
+            throw new FileNotFoundException();
+        }
     }
 
-    public VMDisk(String xmlDesc) throws JAXBException {
+    public VMDisk(String xmlDesc) throws JAXBException, FileNotFoundException {
         DiskXML diskXML = new DomainXMLParser(xmlDesc, XMLType.TYPE_DISK).parseDiskXML();
 
         this.device = diskXML.getDevice();
@@ -35,6 +41,10 @@ public class VMDisk {
         this.sourceFile = diskXML.getSource().getFile();
         this.targetDev = diskXML.getTarget().getDev();
         this.targetBus = diskXML.getTarget().getBus();
+
+        if (!new File(this.sourceFile).exists()) {
+            throw new FileNotFoundException();
+        }
     }
 
     public String getDevice() {
