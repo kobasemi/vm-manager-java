@@ -1,7 +1,12 @@
 package net.asaken1021.vmmanager.util.vm;
 
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Objects;
+
 import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
+import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.vm.networkinterface.*;
 import net.asaken1021.vmmanager.util.vm.networkinterface.xml.NetworkInterfaceXML;
@@ -13,11 +18,21 @@ public class VMNetworkInterface {
     private String model;
     private InterfaceType interfaceType;
 
-    public VMNetworkInterface(String macAddress, String source, String model, InterfaceType interfaceType) {
+    public VMNetworkInterface(String macAddress, String source, String model, InterfaceType interfaceType) throws InterfaceNotFoundException {
         this.macAddress = macAddress;
         this.source = source;
         this.model = model;
         this.interfaceType = interfaceType;
+
+        if (this.interfaceType.equals(InterfaceType.IF_BRIDGE)) {
+            try {
+                if (Objects.isNull(NetworkInterface.getByName(source))) {
+                    throw new InterfaceNotFoundException();
+                }
+            } catch (SocketException e) {
+                throw new InterfaceNotFoundException(e);
+            }
+        }
     }
 
     public VMNetworkInterface(String xmlDesc) throws JAXBException, TypeNotFoundException {

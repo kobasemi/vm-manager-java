@@ -3,8 +3,8 @@ package net.asaken1021.vmmanager.util.vm.video;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 
 public enum VideoType {
-    VIDEO_VIRTIO("virtio"),
-    VIDEO_VGA("vga");
+    VIDEO_VGA("vga"),
+    VIDEO_VIRTIO("virtio");
 
     private String text;
 

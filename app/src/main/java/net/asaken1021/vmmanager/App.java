@@ -28,9 +28,9 @@ public class App {
         String vmName;
         int vmCpus;
         long vmRam;
-        String vmDiskPath;
-        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
-        List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+        // String vmDiskPath;
+        List<VMDisk> vmDisks;
+        List<VMNetworkInterface> vmNetworkInterfaces;
         VMGraphics vmGraphics;
         VMVideo vmVideo;
 
@@ -45,15 +45,24 @@ public class App {
         }
 
         while (select >= 0) {
+            vmNames = new ArrayList<String>();
+
+            vmName = "";
+            vmCpus = 0;
+            vmRam = 0;
+            vmDisks = new ArrayList<VMDisk>();
+            vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+
             printLine();
 
-            System.out.println("MENU");
-            System.out.println("Create VM    :  1");
-            System.out.println("Get VMs List :  2");
-            System.out.println("Get VM Info  :  3");
-            System.out.println("Delete VM    :  4");
-            System.out.println("Exit         : -1");
-            System.out.print("Select > ");
+            System.out.println("メニュー");
+            System.out.println("仮想マシンの作成:  1");
+            System.out.println("仮想マシンの一覧:  2");
+            System.out.println("仮想マシンの情報:  3");
+            System.out.println("仮想マシンの削除:  4");
+            System.out.println("仮想マシンの操作:  5");
+            System.out.println("終了            : -1");
+            System.out.print("選択肢を入力 > ");
 
             try {
                 select = scanner.nextInt();
@@ -62,57 +71,78 @@ public class App {
 
                 switch (select) {
                     case 1:
-                        System.out.print("VM Name > ");
+                        System.out.println("仮想マシン作成");
+
+                        System.out.print("- 仮想マシン名 > ");
                         vmName = scanner.next();
-                        System.out.print("VM Cpus > ");
+
+                        System.out.print("- CPU数 > ");
                         vmCpus = scanner.nextInt();
-                        System.out.print("VM Ram Size (MiB) > ");
+
+                        System.out.print("- RAM(MiB) > ");
                         vmRam = scanner.nextLong() * 1024;
-                        System.out.print("VM Disk path > ");
-                        vmDiskPath = scanner.next();
-                        vmDisks.add(new VMDisk("disk", "file", "qemu", "qcow2", vmDiskPath, "vda", "virtio"));
-                        vmNetworkInterfaces.add(new VMNetworkInterface(null, "virbr0", "virtio", InterfaceType.IF_BRIDGE));
+
+                        System.out.println("- 仮想ディスクの追加");
+                        vmDisks = createVmDisks(scanner);
+
+                        System.out.println("- ネットワークインターフェイスの追加");
+                        vmNetworkInterfaces = createVmNetworkInterfaces(scanner);
+                        
                         vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
                         vmGraphics = new VMGraphics("vnc", -1);
-                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                        
+                        domain = vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                        System.out.println("仮想マシン " + domain.getVmName() + " を作成しました");
                         break;
                     case 2:
+                        System.out.println("仮想マシンの一覧");
                         vmNames = vmm.getVmNames();
                         for (String name : vmNames) {
-                            System.out.println(name);
+                            System.out.println("- " + name);
                         }
                         break;
                     case 3:
-                        System.out.print("VM Name > ");
+                        System.out.print("仮想マシン名 > ");
                         vmName = scanner.next();
+
+                        System.out.println("仮想マシン情報");
+
                         domain = vmm.getVm(vmName);
-                        System.out.println("VM Name : " + domain.getVmName());
-                        System.out.println("vCPUs   : " + domain.getVmCpus());
-                        System.out.println("RAM(MiB): " + domain.getVmRamSize(VMRamUnit.RAM_MiB));
-                        System.out.println("Disks   : ");
+
+                        System.out.println("- 仮想マシン名  : " + domain.getVmName());
+                        System.out.println("- 電源状態      : " + domain.getVmStateString());
+                        System.out.println("- CPU数         : " + domain.getVmCpus());
+                        System.out.println("- RAM(MiB)      : " + domain.getVmRamSize(VMRamUnit.RAM_MiB));
+                        System.out.println("- 仮想ディスク  : ");
                         for (VMDisk disk : domain.getVmDisks()) {
-                            System.out.println("  Disk Path: " + disk.getSourceFile());
-                            System.out.println("  Disk Type: " + disk.getType());
+                            System.out.println("- - ファイルパス: " + disk.getSourceFile());
+                            System.out.println("- - ディスク情報: " + disk.getDevice() + ", "
+                                + disk.getDriverType() + ", " + disk.getTargetDev() + ", " + disk.getTargetBus());
                         }
-                        System.out.println("Network :");
+                        System.out.println("- ネットワーク  :");
                         for (VMNetworkInterface iface : domain.getVmNetworkInterfaces()) {
-                            System.out.println("  Interface Mac Address: " + iface.getMacAddress());
-                            System.out.println("  Interface Type       : " + iface.getInterfaceType().getText());
-                            System.out.println("  Interface Source     : " + iface.getSource());
+                            System.out.println("- - MACアドレス : " + iface.getMacAddress());
+                            System.out.println("- - タイプ      : " + iface.getInterfaceType().getTypeText());
+                            System.out.println("- - ソース      : " + iface.getSource());
                         }
-                        System.out.println("Graphics:");
-                        System.out.println("  Graphics Type: " + domain.getVmGraphics().getGraphicsType());
-                        System.out.println("Video   :");
-                        System.out.println("  Video Type: " + domain.getVmVideo().getType().getText());
+                        System.out.println("- グラフィックス:");
+                        System.out.println("- - 接続タイプ  : " + domain.getVmGraphics().getGraphicsType());
+                        System.out.println("- 画面出力      :");
+                        System.out.println("- - 出力デバイス: " + domain.getVmVideo().getType().getText());
                         break;
                     case 4:
-                        System.out.print("VM Name > ");
+                        System.out.print("仮想マシン名 > ");
                         vmName = scanner.next();
                         vmm.deleteVm(vmName);
-                        System.out.println();
+                        System.out.println("仮想マシンを削除しました");
                         break;
+                    case 5:
+                        System.out.print("仮想マシン名 > ");
+                        vmName = scanner.next();
+                        controlVm(scanner, vmm, vmName);
                 }
-            } catch (DomainCreateException | DomainLookupException | DomainDeleteException | FileNotFoundException e) {
+            } catch (DomainCreateException | DomainLookupException | DomainDeleteException | FileNotFoundException
+            | TypeNotFoundException | InterfaceNotFoundException | DomainStartException | DomainStopException e) {
                 printError(e.getLocalizedMessage());
             } catch (InputMismatchException e) {
                 printLine();
@@ -138,5 +168,102 @@ public class App {
 
     private static void printError(String message) {
         System.err.println("エラー: " + message);
+    }
+
+    private static List<VMDisk> createVmDisks(Scanner scanner) throws FileNotFoundException {
+        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+        boolean addDisk = true;
+        String filePath, fileType, diskType, diskDev, diskBus, select;
+
+        while (addDisk) {
+            System.out.print("- - 仮想ディスクファイルの絶対パス > ");
+            filePath = scanner.next();
+
+            System.out.print("- - 仮想ディスクファイルの種類 [qcow2/raw] > ");
+            fileType = scanner.next();
+
+            System.out.print("- - 仮想ディスクの種類 [disk/cdrom] > ");
+            diskType = scanner.next();
+
+            System.out.print("- - 仮想ディスクのデバイス名 [sdX/vdX] > ");
+            diskDev = scanner.next();
+
+            System.out.print("- - 仮想ディスクのバスタイプ [virtio/sata/scsi] > ");
+            diskBus = scanner.next();
+
+            vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
+
+            System.out.print("- さらに仮想ディスクを追加しますか? [y/n] > ");
+            select = scanner.next();
+
+            if (select.equalsIgnoreCase("n")) {
+                addDisk = false;
+            }
+        }
+
+        return vmDisks;
+    }
+
+    private static List<VMNetworkInterface> createVmNetworkInterfaces(Scanner scanner)
+    throws TypeNotFoundException, InterfaceNotFoundException {
+        List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+        boolean addInterface = true;
+        String macAddress, source, model, type, select;
+
+        while (addInterface) {
+            System.out.print("- - MACアドレス (\"0\"ならランダム) > ");
+            macAddress = scanner.next();
+
+            System.out.print("- - 接続方法 [network/bridge] > ");
+            type = scanner.next();
+
+            System.out.print("- - 接続先 (ネットワークやブリッジの名前) > ");
+            source = scanner.next();
+
+            System.out.print("- - インターフェイスモデル [virtio/e1000/e1000e] > ");
+            model = scanner.next();
+
+            if (macAddress.equals("0")) {
+                macAddress = "";
+            }
+
+            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type)));
+
+            System.out.print("- さらにインターフェイスを追加しますか? [y/n] > ");
+            select = scanner.next();
+
+            if (select.equalsIgnoreCase("n")) {
+                addInterface = false;
+            }
+        }
+
+        return vmNetworkInterfaces;
+    }
+
+    private static void controlVm(Scanner scanner, VMManager vmm, String name)
+    throws DomainLookupException, DomainStartException, DomainStopException {
+        int select;
+
+        VMDomain domain = vmm.getVm(name);
+
+        System.out.println("- 操作を選択");
+        System.out.println("- 起動: 1");
+        System.out.println("- 強制停止: 2");
+        System.out.print("- 選択肢を入力 > ");
+        select = scanner.nextInt();
+
+        switch (select) {
+            case 1:
+                vmm.startVm(domain.getVmName());
+                System.out.println("仮想マシン " + domain.getVmName() + " を起動しました");
+                break;
+            case 2:
+                vmm.stopVm(domain.getVmName());
+                System.out.println("仮想マシン " + domain.getVmName() + " を強制停止しました");
+                break;
+            default:
+                System.out.println("無効な選択です");
+                break;
+        }
     }
 }

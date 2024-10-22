@@ -3,23 +3,23 @@ package net.asaken1021.vmmanager.util.vm.networkinterface;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 
 public enum InterfaceType {
-    IF_NETWORK("network"),
-    IF_BRIDGE("bridge");
+    IF_BRIDGE("bridge"),
+    IF_NETWORK("network");
 
-    private String text;
+    private String typeText;
 
-    private InterfaceType(String text) {
-        this.text = text;
+    private InterfaceType(String typeText) {
+        this.typeText = typeText;
     }
 
-    public String getText() {
-        return this.text;
+    public String getTypeText() {
+        return this.typeText;
     }
 
     public static InterfaceType getTypeByString(String type) throws TypeNotFoundException {
-        if (type.equals(InterfaceType.IF_NETWORK.getText())) {
+        if (type.equals(InterfaceType.IF_NETWORK.getTypeText())) {
             return InterfaceType.IF_NETWORK;
-        } else if (type.equals(InterfaceType.IF_BRIDGE.getText())) {
+        } else if (type.equals(InterfaceType.IF_BRIDGE.getTypeText())) {
             return InterfaceType.IF_BRIDGE;
         }
         

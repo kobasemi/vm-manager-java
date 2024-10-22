@@ -138,7 +138,7 @@ public class DomainXMLBuilder {
 
         for (VMNetworkInterface vminterface : this.vmNetworkInterfaces) {
             Element netinterface = this.document.createElement("interface");
-            netinterface.setAttribute("type", vminterface.getInterfaceType().getText());
+            netinterface.setAttribute("type", vminterface.getInterfaceType().getTypeText());
 
             if (Objects.nonNull(vminterface.getMacAddress()) && !vminterface.getMacAddress().isEmpty()) {
                 Element mac = this.document.createElement("mac");
@@ -147,7 +147,7 @@ public class DomainXMLBuilder {
             }
 
             Element source = this.document.createElement("source");
-            source.setAttribute(vminterface.getInterfaceType().getText(), vminterface.getSource());
+            source.setAttribute(vminterface.getInterfaceType().getTypeText(), vminterface.getSource());
             netinterface.appendChild(source);
 
             Element model = this.document.createElement("model");

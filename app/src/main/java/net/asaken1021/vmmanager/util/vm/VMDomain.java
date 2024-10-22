@@ -215,6 +215,18 @@ public class VMDomain {
         return this.domInfo.state;
     }
 
+    public void startVm() throws LibvirtException {
+        this.dom.create();
+    }
+
+    public void shutdownVm() throws LibvirtException {
+        this.dom.shutdown();
+    }
+
+    public void stopVm() throws LibvirtException {
+        this.dom.destroy();
+    }
+
     public String getVmName() {
         return this.vmName;
     }

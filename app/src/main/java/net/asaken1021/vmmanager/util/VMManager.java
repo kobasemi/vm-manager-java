@@ -77,9 +77,25 @@ public class VMManager {
 
     public void deleteVm(String name) throws DomainDeleteException {
         try {
-            this.conn.domainLookupByName(name).undefine();
+            this.conn.domainLookupByName(name).undefine(55);
         } catch (LibvirtException e) {
             throw new DomainDeleteException(e);
+        }
+    }
+
+    public void startVm(String name) throws DomainStartException {
+        try {
+            getVm(name).startVm();
+        } catch (LibvirtException | DomainLookupException e) {
+            throw new DomainStartException(e);
+        }
+    }
+
+    public void stopVm(String name) throws DomainStopException {
+        try {
+            getVm(name).stopVm();
+        } catch (LibvirtException | DomainLookupException e) {
+            throw new DomainStopException(e);
         }
     }
 }

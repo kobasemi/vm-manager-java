@@ -6,6 +6,6 @@ public class FileNotFoundException extends Exception {
     }
 
     public FileNotFoundException(Exception e) {
-        super("指定されたファイルが見つかりません" + e.getLocalizedMessage());
+        super("指定されたファイルが見つかりません\n" + e.getLocalizedMessage());
     }
 }
