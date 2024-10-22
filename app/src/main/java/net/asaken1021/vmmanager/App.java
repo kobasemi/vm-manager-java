@@ -1,8 +1,10 @@
 package net.asaken1021.vmmanager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.libvirt.LibvirtException;
@@ -19,6 +21,29 @@ import net.asaken1021.vmmanager.util.vm.video.VideoType;
 
 public class App {
     public static void main(String[] args) {
+        Map<String, String> argsMap = parseArgument(args);
+
+        if (argsMap.containsKey("web-api")) {
+            if (argsMap.containsKey("uri")) {
+                // web api func with uri
+            } else {
+                // web api func without uri
+            }
+        } else {
+            if (argsMap.containsKey("uri")) {
+                String uri = argsMap.get("uri");
+                if (uri.equals("")) {
+                    printError("--uri オプションが渡されましたが，URIの指定がありません．デフォルトを使用します");
+                    uri = "qemu:///system";
+                }
+                cliApp(uri);
+            } else {
+                cliApp("qemu:///system");
+            }
+        }
+    }
+
+    private static void cliApp(String uri) {
         VMManager vmm;
         int select = 0;
         Scanner scanner = new Scanner(System.in);
@@ -28,7 +53,6 @@ public class App {
         String vmName;
         int vmCpus;
         long vmRam;
-        // String vmDiskPath;
         List<VMDisk> vmDisks;
         List<VMNetworkInterface> vmNetworkInterfaces;
         VMGraphics vmGraphics;
@@ -37,7 +61,7 @@ public class App {
         VMDomain domain;
         
         try {
-            vmm = new VMManager("qemu:///system");
+            vmm = new VMManager(uri);
         } catch (ConnectException e) {
             printError(e.getLocalizedMessage());
             scanner.close();
@@ -157,6 +181,34 @@ public class App {
         } catch (LibvirtException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Map<String, String> parseArgument(String[] args) {
+        Map<String, String> parsedArgs = new HashMap<String, String>();
+
+        int parseFlag = 0;
+        String parsedValueDest = "";
+
+        for (String arg : args) {
+            if (parseFlag == 0) {
+                switch (arg) {
+                    case "--uri":
+                        parsedArgs.put("uri", "");
+                        parsedValueDest = "uri";
+                        parseFlag = 1;
+                        break;
+                    case "--web-api":
+                        parsedArgs.put("web-api", "");
+                        break;
+                }
+            } else {
+                parsedArgs.put(parsedValueDest, arg);
+                parseFlag = 0;
+                parsedValueDest = "";
+            }
+        }
+
+        return parsedArgs;
     }
 
     private static void printLine() {
