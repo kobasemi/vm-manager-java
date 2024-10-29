@@ -29,10 +29,14 @@ public class WebApiApp {
         }
     }
 
+    public WebApiApp(VMManager vmm) {
+        this.vmm = vmm;
+    }
+
     public void run() {
         try {
             this.webApp = Flak.createHttpApp(8080);
-            webApp.scan(new WebApiApp(this.uri));
+            webApp.scan(new WebApiApp(this.vmm));
             webApp.start();
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException | IOException e) {
             printError(e.getLocalizedMessage());
