@@ -8,8 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'org.springframework.boot' version '3.3.4'
-    id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.gradleup.shadow' version '8.3.3'
 }
 
 repositories {
@@ -56,19 +55,4 @@ application {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
-}
-
-task fatJar(type: Jar) {
-
-    manifest {
-        attributes 'Main-Class': "net.asaken1021.vmmanager.App"
-    }
-
-    archiveBaseName = "${rootProject.name}"
-    tasks.withType(Jar){
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    }
-    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    //from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } setDuplicatesStrategy(DuplicatesStrategy.INCLUDE) }
-    with jar
 }
